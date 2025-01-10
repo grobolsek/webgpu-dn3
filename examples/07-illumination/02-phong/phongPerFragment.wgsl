@@ -36,7 +36,7 @@ struct LightUniforms {
     ambientIntensity: f32,
 
     direction: vec3f,
-    focus: f32,
+    f: f32,
     coneTheta: f32,
 }
 
@@ -75,24 +75,33 @@ fn fragment(input: FragmentInput) -> FragmentOutput {
 
     let surfacePosition = input.position;
     let d = distance(surfacePosition, light.position);
-    let attenuation = 1 / dot(light.attenuation, vec3(1, d, d * d));
+    let Ad = 1 / dot(light.attenuation, vec3(1, d, d * d)); // attenuation
 
     let N = normalize(input.normal);
     let L = normalize(light.position - surfacePosition);
     let V = normalize(camera.position - surfacePosition);
     let H = normalize(L + V);
+    let normalizedDirection = normalize(light.direction);
 
-    let lambert = max(dot(N, L), 0.0) * material.diffuse;
+    var Af: f32 = 0.0;
 
-    let blinnPhong = pow(max(dot(N, H), 0.0), material.shininess) * material.specular;
+    let distanceFormLight = dot((-1 * L), normalizedDirection);
+    let coneLimit = cos(radians(light.coneTheta));
 
-    let ambientLight = light.ambientColor * light.ambientIntensity;
+    if (distanceFormLight > coneLimit) {
+        Af = pow(distanceFormLight, light.f);
+    }
 
-    let diffuseLight = lambert * attenuation * light.color + ambientLight;
-    let specularLight = blinnPhong * attenuation * light.color;
+    let Iambient = light.ambientColor * light.ambientIntensity; // ambient light
+
+    let Idiffuse = material.diffuse * light.color * max(dot(N, L), 0.0); // Lambert
+
+    let Ispecular =  material.specular * light.color * pow(max(dot(N, H), 0.0), material.shininess); // blinnPhong
+
+    let I = Ad * Af * (Idiffuse + Ispecular) + Iambient;
 
     let baseColor = textureSample(baseTexture, baseSampler, input.texcoords) * material.baseFactor;
-    let finalColor = baseColor.rgb * diffuseLight + specularLight;
+    let finalColor = baseColor.rgb * I;
 
     output.color = pow(vec4(finalColor, 1), vec4(1 / 2.2));
 

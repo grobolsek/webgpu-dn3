@@ -10,11 +10,11 @@ export class ReflectorLight extends Light {
             ambientIntensity = 0.05,
 
             direction = [0, 0, -1],
-            focus = 0.9, // od 0 do 1
-            coneTheta = 0.8, // od 0 do 1, 0.8 = cos(30)
+            f = 2.0,
+            coneTheta = 10,
         }) {
         super({color, intensity, attenuation, ambientColor, ambientIntensity});
-        this.focus = focus;
+        this.f = f;
         this.coneTheta = coneTheta;
         this.direction = direction;
     }

@@ -315,8 +315,8 @@ export class Renderer extends BaseRenderer {
         const LightAmbientColor = vec3.clone(lightComponent.ambientColor);
         const LightAmbientIntensity = lightComponent.ambientIntensity;
         const LightDirection = vec3.clone(lightComponent.direction);
-        const LightFocus = lightComponent.focus;
-        const LightConeTheta = vec3.clone(lightComponent.coneTheta);
+        const LightF = lightComponent.f;
+        const LightConeTheta = lightComponent.coneTheta;
 
         // prepare spaces
         const { lightUniformBuffer, lightBindGroup } = this.prepareLight(lightComponent);
@@ -328,7 +328,7 @@ export class Renderer extends BaseRenderer {
             ambientColor: new Float32Array(LightUniformsValues, 48, 3),
             ambientIntensity: new Float32Array(LightUniformsValues, 60, 1),
             direction: new Float32Array(LightUniformsValues, 64, 3),
-            focus: new Float32Array(LightUniformsValues, 76, 1),
+            f: new Float32Array(LightUniformsValues, 76, 1),
             coneTheta: new Float32Array(LightUniformsValues, 80, 1),
         };
 
@@ -339,7 +339,7 @@ export class Renderer extends BaseRenderer {
         LightUniformsViews.ambientColor.set(LightAmbientColor);
         LightUniformsViews.ambientIntensity[0] = LightAmbientIntensity;
         LightUniformsViews.direction.set(LightDirection);
-        LightUniformsViews.focus[0] = LightFocus;
+        LightUniformsViews.f[0] = LightF;
         LightUniformsViews.coneTheta[0] = LightConeTheta;
 
         this.device.queue.writeBuffer(lightUniformBuffer, 0, LightUniformsValues);

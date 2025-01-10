@@ -35,11 +35,15 @@ material.shininess = 50;
 
 const light = new Node();
 light.addComponent(new Transform({
-    translation: [0, 0, 2],
+    translation: [0, 0, 4],
 }));
 light.addComponent(new ReflectorLight({
     intensity: 3,
+    direction: [0, 0, -1],
+    f: 100,
+    coneTheta: 5,
 }));
+
 scene.addChild(light);
 
 function update(time, dt) {
