@@ -5,7 +5,7 @@ export class Light {
         intensity = 1,
         attenuation = [0.001, 0, 0.3],
         ambientColor = [1, 1, 1],
-        ambientIntensity = 1,
+        ambientIntensity = 0.05,
 
     } = {}) {
         this.color = color;

@@ -14,6 +14,7 @@ import {
 
 import { Renderer } from './Renderer.js';
 import { Light } from './Light.js';
+import {ReflectorLight} from "./ReflectorLight.js";
 
 const canvas = document.querySelector('canvas');
 const renderer = new Renderer(canvas);
@@ -34,9 +35,9 @@ material.shininess = 50;
 
 const light = new Node();
 light.addComponent(new Transform({
-    translation: [0, 2, 2],
+    translation: [0, 0, 2],
 }));
-light.addComponent(new Light({
+light.addComponent(new ReflectorLight({
     intensity: 3,
 }));
 scene.addChild(light);

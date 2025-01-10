@@ -13,6 +13,7 @@ import {
 } from 'engine/core/SceneUtils.js';
 
 import { Light } from './Light.js';
+import {ReflectorLight} from "./ReflectorLight.js";
 
 const vertexBufferLayout = {
     arrayStride: 32,
@@ -214,7 +215,7 @@ export class Renderer extends BaseRenderer {
         }
 
         const lightUniformBuffer = this.device.createBuffer({
-            size: 68,
+            size: 96,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
 
@@ -304,20 +305,44 @@ export class Renderer extends BaseRenderer {
         this.renderPass.setBindGroup(0, cameraBindGroup);
 
         // render light
-        const light = scene.find(node => node.getComponentOfType(Light));
-        const lightComponent = light.getComponentOfType(Light);
+        const light = scene.find(node => node.getComponentOfType(ReflectorLight));
+        const lightComponent = light.getComponentOfType(ReflectorLight);
+
+        // prepare values
         const lightColor = vec3.scale(vec3.create(), lightComponent.color, lightComponent.intensity / 255);
         const lightPosition = mat4.getTranslation(vec3.create(), getGlobalModelMatrix(light));
         const lightAttenuation = vec3.clone(lightComponent.attenuation);
         const LightAmbientColor = vec3.clone(lightComponent.ambientColor);
-        const LightAmbientIntensity = light.intensity;
+        const LightAmbientIntensity = lightComponent.ambientIntensity;
+        const LightDirection = vec3.clone(lightComponent.direction);
+        const LightFocus = lightComponent.focus;
+        const LightConeTheta = vec3.clone(lightComponent.coneTheta);
 
+        // prepare spaces
         const { lightUniformBuffer, lightBindGroup } = this.prepareLight(lightComponent);
-        this.device.queue.writeBuffer(lightUniformBuffer, 0, lightColor);
-        this.device.queue.writeBuffer(lightUniformBuffer, 16, lightPosition);
-        this.device.queue.writeBuffer(lightUniformBuffer, 32, lightAttenuation);
-        this.device.queue.writeBuffer(lightUniformBuffer, 48, LightAmbientColor);
-        this.device.queue.writeBuffer(lightUniformBuffer, 64, LightAmbientIntensity);
+        const LightUniformsValues = new ArrayBuffer(96);
+        const LightUniformsViews = {
+            color: new Float32Array(LightUniformsValues, 0, 3),
+            position: new Float32Array(LightUniformsValues, 16, 3),
+            attenuation: new Float32Array(LightUniformsValues, 32, 3),
+            ambientColor: new Float32Array(LightUniformsValues, 48, 3),
+            ambientIntensity: new Float32Array(LightUniformsValues, 60, 1),
+            direction: new Float32Array(LightUniformsValues, 64, 3),
+            focus: new Float32Array(LightUniformsValues, 76, 1),
+            coneTheta: new Float32Array(LightUniformsValues, 80, 1),
+        };
+
+        // set values
+        LightUniformsViews.color.set(lightColor);
+        LightUniformsViews.position.set(lightPosition);
+        LightUniformsViews.attenuation.set(lightAttenuation);
+        LightUniformsViews.ambientColor.set(LightAmbientColor);
+        LightUniformsViews.ambientIntensity[0] = LightAmbientIntensity;
+        LightUniformsViews.direction.set(LightDirection);
+        LightUniformsViews.focus[0] = LightFocus;
+        LightUniformsViews.coneTheta[0] = LightConeTheta;
+
+        this.device.queue.writeBuffer(lightUniformBuffer, 0, LightUniformsValues);
 
         this.renderPass.setBindGroup(1, lightBindGroup);
 
