@@ -31,6 +31,8 @@ struct LightUniforms {
     color: vec3f,
     position: vec3f,
     attenuation: vec3f,
+    ambientColor: vec3f,
+    ambientIntensity: f32,
 }
 
 struct ModelUniforms {
@@ -73,16 +75,18 @@ fn fragment(input: FragmentInput) -> FragmentOutput {
     let N = normalize(input.normal);
     let L = normalize(light.position - surfacePosition);
     let V = normalize(camera.position - surfacePosition);
-    let R = normalize(reflect(-L, N));
+    let H = normalize(L + V);
 
     let lambert = max(dot(N, L), 0.0) * material.diffuse;
-    let phong = pow(max(dot(V, R), 0.0), material.shininess) * material.specular;
+
+    let blinnPhong = pow(max(dot(N, H), 0.0), material.shininess) * material.specular;
 
     let diffuseLight = lambert * attenuation * light.color;
-    let specularLight = phong * attenuation * light.color;
+    let specularLight = blinnPhong * attenuation * light.color;
+    let ambientLight = light.ambientColor * light.ambientIntensity;
 
     let baseColor = textureSample(baseTexture, baseSampler, input.texcoords) * material.baseFactor;
-    let finalColor = baseColor.rgb * diffuseLight + specularLight;
+    let finalColor = ambientLight + baseColor.rgb * diffuseLight + specularLight;
 
     output.color = pow(vec4(finalColor, 1), vec4(1 / 2.2));
 

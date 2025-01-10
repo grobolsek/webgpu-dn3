@@ -214,7 +214,7 @@ export class Renderer extends BaseRenderer {
         }
 
         const lightUniformBuffer = this.device.createBuffer({
-            size: 48,
+            size: 68,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
 
@@ -303,15 +303,22 @@ export class Renderer extends BaseRenderer {
         this.device.queue.writeBuffer(cameraUniformBuffer, 128, cameraPosition);
         this.renderPass.setBindGroup(0, cameraBindGroup);
 
+        // render light
         const light = scene.find(node => node.getComponentOfType(Light));
         const lightComponent = light.getComponentOfType(Light);
         const lightColor = vec3.scale(vec3.create(), lightComponent.color, lightComponent.intensity / 255);
         const lightPosition = mat4.getTranslation(vec3.create(), getGlobalModelMatrix(light));
         const lightAttenuation = vec3.clone(lightComponent.attenuation);
+        const LightAmbientColor = vec3.clone(lightComponent.ambientColor);
+        const LightAmbientIntensity = light.intensity;
+
         const { lightUniformBuffer, lightBindGroup } = this.prepareLight(lightComponent);
         this.device.queue.writeBuffer(lightUniformBuffer, 0, lightColor);
         this.device.queue.writeBuffer(lightUniformBuffer, 16, lightPosition);
         this.device.queue.writeBuffer(lightUniformBuffer, 32, lightAttenuation);
+        this.device.queue.writeBuffer(lightUniformBuffer, 48, LightAmbientColor);
+        this.device.queue.writeBuffer(lightUniformBuffer, 64, LightAmbientIntensity);
+
         this.renderPass.setBindGroup(1, lightBindGroup);
 
         this.renderNode(scene);

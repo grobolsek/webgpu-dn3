@@ -14,6 +14,7 @@ export class Material {
         occlusionFactor = 1,
         roughnessFactor = 1,
         metalnessFactor = 1,
+
     } = {}) {
         this.baseTexture = baseTexture;
         this.emissionTexture = emissionTexture;
